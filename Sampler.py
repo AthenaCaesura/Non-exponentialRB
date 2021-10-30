@@ -101,7 +101,6 @@ class SampleGroup(object):
 
 
 class CliffordSampler(SampleGroup):
-
     def __init__(self, numqubits=1):
         if numqubits == 1:
             gens = np.array([H, P])
@@ -111,20 +110,3 @@ class CliffordSampler(SampleGroup):
                              kron(CNOT, eye(2**(numqubits - 2)))])
         super().__init__(gens, n=3,
                          Multiply=lambda a, b: np.matmul(a, b))
-        
-def symplectic_to_natural(clif):
-    """
-    Takes the symplectic form of a clifford gate to the normal
-    representaiton of clifford matricies.
-
-    Parameters
-    ----------
-    clif : np.array
-        Clifford Matrix in sympletic representation.
-
-    Returns
-    -------
-    natural_clif : np.array
-        Clifford matrix in natural representation.
-    """
-    pass
