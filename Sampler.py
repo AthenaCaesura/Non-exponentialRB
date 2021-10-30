@@ -1,22 +1,8 @@
 from random import sample
 from math import sqrt
 from numpy import kron, eye
+from utils import H, P, CNOT
 import numpy as np
-
-
-pauli = np.array([[[1, 0], [0, 1]],
-                  [[0, 1], [1, 0]],
-                  [[0, -1j], [1j, 0]],
-                  [[1, 0], [0, -1]]], dtype=np.complex128)
-
-H = 1 / sqrt(2) * np.array([[1, 1],
-                            [1, -1]])
-P = np.array([[1, 0],
-              [0, 1j]])
-CNOT = np.array([[1, 0, 0, 0],
-                 [0, 1, 0, 0],
-                 [0, 0, 0, 1],
-                 [0, 0, 1, 0]])
 
 # =============================================================================
 # We implement the algorithm given in GENERATING RANDOM ELEMENTS OF A
@@ -115,7 +101,6 @@ class SampleGroup(object):
 
 
 class CliffordSampler(SampleGroup):
-
     def __init__(self, numqubits=1):
         if numqubits == 1:
             gens = np.array([H, P])
