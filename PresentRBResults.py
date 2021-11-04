@@ -36,11 +36,3 @@ def plot_shots(num_qubits=1, maxm=50, sample_period=1, num_trials=1000,
     plt.savefig("plots/" + str(int(100 * mem_err_prob)) + "_memory_"
                          + str(num_qubits) + "_qubits.png")
     plt.show()
-
-
-if __name__ == "__main__":
-    for num in [1, 3, 5]:
-        for prob in [.9, .95, .99]:
-            print("Current qubit number is: " + str(num))
-            print("Current probability is: " + str(prob))
-            plot_shots(num_qubits=num, mem_err_prob=prob)
