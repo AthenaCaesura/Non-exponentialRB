@@ -15,4 +15,4 @@ if __name__ == "__main__":
             print("Current qubit number is: " + str(num_qubits))
             print("Current probability of a memory error is: "
 				  + str(100 * mem_err_prob) + "%")
-            plot_shots(num_qubits=num_qubits, mem_err_prob=mem_err_prob)
+            plot_shots(maxm=20, num_qubits=num_qubits, mem_err_prob=mem_err_prob)

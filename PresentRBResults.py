@@ -35,4 +35,5 @@ def plot_shots(num_qubits=1, maxm=50, sample_period=1, num_trials=1000,
               + str(int(100 * mem_err_prob)) + "% memory fidelity")
     plt.savefig("plots/" + str(int(100 * mem_err_prob)) + "_memory_"
                          + str(num_qubits) + "_qubits.png")
-    plt.show()
+    plt.clf()
+    # plt.show()
