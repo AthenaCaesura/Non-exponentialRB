@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Nov  3 21:56:54 2021
-
-@author: Athena
-
 Runs and Plots results for low levels of memory fidelity in register B.
 """
 from PresentRBResults import plot_shots

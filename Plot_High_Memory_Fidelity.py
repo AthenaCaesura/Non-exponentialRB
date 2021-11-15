@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Nov  3 21:54:14 2021
-
-@author: Athena
-
 Runs and Plots results for high levels of memory fidelity in register B.
 """
 
