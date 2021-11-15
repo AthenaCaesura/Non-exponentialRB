@@ -5,10 +5,9 @@ from utils import dot, pauli_on_qubit, depolarizing_noise
 
 def faulty_qubit_mem(stored_pauli, mem_fidelity, n):
     """
-    Simulate a faulty memory in regiester B. Acheives this by multiplying
-    the current pauli frame by X's and Z's for each qubit. When an X is
-    applied, we have effectively flipped the a qubit in register B which
-    was storing that X gate. Similarly for Z.
+    Simulate a faulty memory in regiester B. Acheives this by multiplying the current
+    pauli frame by X's and Z's for each qubit. When an X is applied, we have effectively
+    flipped the a qubit in register B which was storing that X gate. Similarly for Z.
 
     Parameters
     ----------
@@ -42,11 +41,11 @@ def srb_memory(inp_state, seq_len, init_pauli_error, n, mem_fidelity,
                apply_noise=depolarizing_noise,
                noise_param=.0):
     """
-    Run a standard randomized benchmarking experiment on a
-    qubit register A. While doing so, we store a Pauli operator in register B
-    and propogate the pauli through each of the gates applied to register A. 
-    By applying the pauli stored in register B with each gate, we create
-    a noise model which creates a non-exponential decay in the RB experiment.
+    Run a standard randomized benchmarking experiment on a qubit register A. While doing
+    so, we store a Pauli operator in register B and propogate the pauli through each of
+    the gates applied to register A. By applying the pauli stored in register B with
+    each gate, we create a noise model which creates a non-exponential decay in the RB
+    experiment.
 
     Parameters
     ----------
