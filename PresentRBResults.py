@@ -14,16 +14,17 @@ import numpy as np
 def plot_shots(num_qubits=1, maxm=50, sample_period=1, num_trials=1000,
                mem_fidelity=1):
     
-    " Start with just |000..0> and XIII...I as  initial state and frame "
-    simple_init_state = get_eigenstate([(1, 3) for _ in range(num_qubits)])
-    simple_pauli_frame = np.kron(single_qubit_paulis[1],
+    """ |000..0> is the inital state of register A and
+    XIII...I is the inital pauli error stored in register B """
+    init_state = get_eigenstate([(1, 3) for _ in range(num_qubits)])
+    init_pauli_error = np.kron(single_qubit_paulis[1],
                                  np.eye(2**(num_qubits - 1)))
 
-    " Gather expectation values for different sequence lengths. "
+    """ Gather expectation values for different sequence lengths. """
     tot_evals = np.array([0. for _ in range(1, maxm, sample_period)])
     for _ in range(num_trials):
-        tot_evals += np.array([srb_memory(simple_init_state, num,
-                                          simple_pauli_frame, num_qubits,
+        tot_evals += np.array([srb_memory(init_state, num,
+                                          init_pauli_error, num_qubits,
                                           mem_fidelity)
                                for num in range(1, maxm, sample_period)])
     tot_evals /= num_trials
