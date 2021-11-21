@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Fri Oct 29 14:06:58 2021
 
@@ -11,19 +10,14 @@ import numpy as np
 from math import sqrt
 from functools import lru_cache
 
-single_qubit_paulis = np.array([[[1, 0], [0, 1]],
-                                [[0, 1], [1, 0]],
-                                [[0, -1j], [1j, 0]],
-                                [[1, 0], [0, -1]]], dtype=np.complex128)
+single_qubit_paulis = np.array(
+    [[[1, 0], [0, 1]], [[0, 1], [1, 0]], [[0, -1j], [1j, 0]], [[1, 0], [0, -1]]],
+    dtype=np.complex128,
+)
 
-H = 1 / sqrt(2) * np.array([[1, 1],
-                            [1, -1]])
-P = np.array([[1, 0],
-              [0, 1j]])
-CNOT = np.array([[1, 0, 0, 0],
-                 [0, 1, 0, 0],
-                 [0, 0, 0, 1],
-                 [0, 0, 1, 0]])
+H = 1 / sqrt(2) * np.array([[1, 1], [1, -1]])
+P = np.array([[1, 0], [0, 1j]])
+CNOT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
 
 
 def get_eigenstate(paulituples):
@@ -46,8 +40,9 @@ def get_eigenstate(paulituples):
     """
     state = np.eye(1)
     for pauli in paulituples:
-        state = np.kron(state, 1 / 2 * (np.eye(2) + pauli[0] *
-                                        single_qubit_paulis[pauli[1]]))
+        state = np.kron(
+            state, 1 / 2 * (np.eye(2) + pauli[0] * single_qubit_paulis[pauli[1]])
+        )
     return state
 
 
@@ -65,8 +60,8 @@ def dot(*matrices):
     product : numpy array
             Matrix product of the input matricies.
 
-        """
-    if (len(matrices) <= 1):
+    """
+    if len(matrices) <= 1:
         return matrices[0]
     return np.matmul(matrices[0], dot(*matrices[1:]))
 
@@ -94,14 +89,14 @@ def pauli_on_qubit(pauli_num, qubit_num, num_qubits):
     """
     full_pauli = np.eye(1)
     for i in range(num_qubits):
-        if i != qubit_num - 1:
+        if i != qubit_num:
             full_pauli = np.kron(full_pauli, np.eye(2))
         else:
             full_pauli = np.kron(full_pauli, single_qubit_paulis[pauli_num])
     return full_pauli
 
 
-def depolarizing_noise(state, p, n):
+def depolarizing_noise(state, n, p):
     """
     Applied despolarizing noise model to state.
 
@@ -111,16 +106,31 @@ def depolarizing_noise(state, p, n):
             Input state to be depolarized.
     p : double [0,1]
             probability of depolarization
-    n : postitive integer
+    n : positive integer
             Number of qubits in system.
 
     Returns
-	-------
-	depolarized_state : numpy array (2^n x 2^n)
-	            Input state with depolarizing noise attached.
-	
-	"""
-    return 4 / 3 * p * np.eye(2**n) / 2**n + (1 - 4 / 3 * p) * state
+        -------
+        depolarized_state : numpy array (2^n x 2^n)
+                    Input state with depolarizing noise attached.
+
+    """
+    return 4 / 3 * p * np.eye(2 ** n) / 2 ** n + (1 - 4 / 3 * p) * state
+
+
+def comm(mat1, mat2):
+    """Calculate the commutator of 2 matrices
+
+    Parameters
+    ----------
+    mats 1 & 2 : np.ndarray
+        Matrices of the same dimension
+
+    Returns
+    -------
+    Commutator of the two input matrices
+    """
+    return dot(mat1, mat2) - dot(mat2, mat1)
 
 
 def symplectic_to_natural(clif):
