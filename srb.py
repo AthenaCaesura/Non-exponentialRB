@@ -1,6 +1,8 @@
 import numpy as np
-from Sampler import CliffordSampler
-from utils import dot, pauli_on_qubit, depolarizing_noise, comm
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Clifford, StabilizerState, random_clifford
+
+from utils import comm, depolarizing_noise, dot, pauli_on_qubit
 
 
 def mem_qubit_flip(stored_pauli, n, flip_prob):
@@ -46,8 +48,7 @@ def mem_qubit_reset(stored_pauli, n, reset_prob):
             Pauli stored in register B to be used as the current error applied to
             register A.
     reset_prob : double in [0, 1]
-            Probability that each pair of qubits in register B corresponding to the
-            same qubit in register A resets to |0>.
+            Probability that each memory qubit in register be resets to |0>.
     n : positive integer
             Number of qubits being benchmarked. (aka the size of register A)
 
@@ -76,14 +77,14 @@ def mem_qubit_reset(stored_pauli, n, reset_prob):
 
 
 def srb_memory(
-    inp_state,
     seq_len,
-    init_pauli_error,
     n,
     mem_err_param,
     mem_err_func,
-    apply_noise=depolarizing_noise,
+    init_pauli_error=,
+    n_shots = 100,
     noise_param=0.0,
+    clifford_noise=lambda x : x,
 ):
     """
     Run a standard randomized benchmarking (srb) experiment on a qubit register A. While
@@ -113,21 +114,24 @@ def srb_memory(
             Survival probability of the input state after RB sequence.
 
     """
-    current_state = np.copy(inp_state)
     stored_pauli = np.copy(init_pauli_error)  # Pauli error stored in Register B
-    sampler = CliffordSampler(n)
-    total_seq = np.eye(2 ** (n))
-    for i in range(seq_len):
-        C = sampler.sample()
-        total_seq = dot(C, total_seq)
-        """ Apply noisy random Clifford gate """
-        current_state = dot(C, current_state, C.conj().T)
-        current_state = apply_noise(current_state, n, noise_param)
+    circ = QuantumCircuit(n,n)
+    stored_pauli = QuantumCircuit(n,n)
+    inv = Clifford.from_label("I" * n) # initalize with identity
+    for _ in range(seq_len):
+        C = random_clifford(n)
+        """ Apply noisy random Clifford gate and track inverse """
+        circ.unitary(C, range(n))
+        circ = apply_noise(circ, n, noise_param)
+        inv &= C
         """ Update pauli stored in register B """
-        stored_pauli = dot(C, stored_pauli, C.conj().T)
+        stored_pauli.unitary(C, range(n))
         stored_pauli = mem_err_func(stored_pauli, n, mem_err_param)
-        """ Apply pauli stored in register B to register A. """
-        current_state = dot(stored_pauli, current_state, stored_pauli.conj().T)
-    current_state = dot(total_seq.conj().T, current_state, total_seq)
-    p_surv = np.round(np.real(np.trace(np.dot(inp_state, current_state))), 8)
+        """ Apply pauli stored in register B to register A"""
+        circ.StabilizerState(stored_pauli).to_operator()
+    inv = inv.adjoint()
+    circ.unitary(inv)
+    sim = AerSimulator(method='extended_stabilizer')
+    tcirc = transpile(circ, sim)
+    result = sim.run(tcirc, nshots)
     return p_surv
