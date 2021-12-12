@@ -1,5 +1,4 @@
 from srb import srb_memory, mem_qubit_reset
-from utils import get_eigenstate, single_qubit_paulis
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -31,25 +30,20 @@ def plot_shots(
         mem_err_func (function):
             Error function to be applied to the memory
     """
-    """ |000..0> is the initial state of register A """
-    init_state = get_eigenstate([(1, 3) for _ in range(num_qubits)])
-    """ XIII...I is the initial pauli error stored in register B """
-    init_pauli_error = np.kron(single_qubit_paulis[1], np.eye(2 ** (num_qubits - 1)))
 
     """ Gather expectation values for different sequence lengths. """
     tot_evals = np.array([0.0 for _ in range(1, maxm, sample_period)])
     for _ in range(num_trials):
+        print(_)
         tot_evals += np.array(
             [
                 srb_memory(
-                    init_state,
-                    num,
-                    init_pauli_error,
+                    seq_len,
                     num_qubits,
                     mem_err_param,
                     mem_err_func,
                 )
-                for num in range(1, maxm, sample_period)
+                for seq_len in range(1, maxm, sample_period)
             ]
         )
     tot_evals /= num_trials
@@ -74,3 +68,6 @@ def plot_shots(
         + "_qubits.png"
     )
     plt.clf()
+
+
+plot_shots(1)
