@@ -1,6 +1,7 @@
-from srb import srb_memory, mem_qubit_reset
 import matplotlib.pyplot as plt
 import numpy as np
+
+from srb import mem_qubit_reset, srb_memory
 
 
 def plot_shots(

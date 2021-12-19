@@ -142,12 +142,37 @@ def srb_memory(seq_len, n, mem_err_param, mem_err_func):
     return reg_a_state.probabilities()[0]  # probability of |00..0> state
 
 
-from time import time
+srb_memory(10, 1, 0, mem_qubit_reset)
 
-start = time()
-srb_memory(1, 1, 0, mem_qubit_reset)
-print(start - time())
+# from time import time
+# from matplotlib import pyplot as plt
+# from scipy.optimize import curve_fit
+# import numpy as np
 
-start = time()
-srb_memory(1000, 1, 0, mem_qubit_reset)
-print(time() - start)
+# times = np.array([])
+# xrange = range(13, 30)
+# for i in xrange:
+#     start = time()
+#     srb_memory(10, i, 0, mem_qubit_reset)
+#     times = np.append(times, [time() - start])
+
+# xrange = np.array(xrange)
+
+
+# def func(x, m, b):
+#     return m * x + b
+
+
+# popt, pcov = curve_fit(func, np.log(xrange), np.log(times))
+
+# print(popt)
+
+# plt.plot(np.log(xrange), np.log(times), "b-", label="data")
+# plt.plot(
+#     np.log(xrange),
+#     np.log(func(np.log(xrange), *popt)),
+#     "r--",
+#     label="fit: m=%5.3f, b=%5.3f" % tuple(popt),
+# )
+# plt.legend(loc="best")
+# plt.show()
