@@ -45,7 +45,7 @@ def mem_qubit_flip(stored_pauli, n, flip_prob):
 
     Returns
     -------
-    stored_pauli : numpy array (2^n x 2^n)
+    stored_pauli_with_error : numpy array (2^n x 2^n)
             Pauli matrix used as the current error with faulty memory applied.
 
     """
@@ -74,19 +74,19 @@ def mem_qubit_reset(stored_pauli, reset_prob):
 
     Returns
     -------
-    stored_pauli : numpy array (2^n x 2^n)
+    stored_pauli_with_error : numpy array (2^n x 2^n)
             Pauli matrix used as the current error with faulty memory applied.
 
     """
     stored_pauli_with_error = ""
     for pauli_str in stored_pauli.to_label():
-        # If X is found on this qubit, reset with probability reset_prob
+        # If X is found in the stored Pauli, reset with probability reset_prob
         if np.random.uniform(0, 1) <= reset_prob:
             if pauli_str == "X":
                 pauli_str = "I"
             if pauli_str == "Y":
                 pauli_str = "Z"
-        # If Z is found on this qubit, reset with probability reset_prob
+        # If Z is found in the stored Pauli, reset with probability reset_prob
         if np.random.uniform(0, 1) <= reset_prob:
             if pauli_str == "Z":
                 pauli_str = "I"
@@ -127,7 +127,7 @@ def srb_memory(seq_len, n, mem_err_param, mem_err_func):
     total_seq = Clifford.from_label("I" * n)
     for _ in range(seq_len):
         C = random_clifford(n)
-        """ Apply noisy random Clifford gate and track inverse """
+        """Apply noisy random Clifford gate and track inverse"""
         reg_a_state = reg_a_state.evolve(C)
         total_seq &= C
         """ Update pauli stored in register B """
@@ -142,37 +142,40 @@ def srb_memory(seq_len, n, mem_err_param, mem_err_func):
     return reg_a_state.probabilities()[0]  # probability of |00..0> state
 
 
-srb_memory(10, 1, 0, mem_qubit_reset)
+from time import time
 
-# from time import time
-# from matplotlib import pyplot as plt
-# from scipy.optimize import curve_fit
-# import numpy as np
-
-# times = np.array([])
-# xrange = range(13, 30)
-# for i in xrange:
-#     start = time()
-#     srb_memory(10, i, 0, mem_qubit_reset)
-#     times = np.append(times, [time() - start])
-
-# xrange = np.array(xrange)
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy.optimize import curve_fit
 
 
-# def func(x, m, b):
-#     return m * x + b
+def test_scaling():
+    times = np.array([])
+    xrange = range(13, 30)
+    for i in xrange:
+        print(i)
+        start = time()
+        srb_memory(10, i, 0, mem_qubit_reset)
+        times = np.append(times, [time() - start])
 
+    xrange = np.array(xrange)
 
-# popt, pcov = curve_fit(func, np.log(xrange), np.log(times))
+    def func(x, m, b):
+        return m * x + b
 
-# print(popt)
+    popt, pcov = curve_fit(func, np.log10(xrange), np.log10(times))
 
-# plt.plot(np.log(xrange), np.log(times), "b-", label="data")
-# plt.plot(
-#     np.log(xrange),
-#     np.log(func(np.log(xrange), *popt)),
-#     "r--",
-#     label="fit: m=%5.3f, b=%5.3f" % tuple(popt),
-# )
-# plt.legend(loc="best")
-# plt.show()
+    print(popt)
+
+    plt.plot(np.log10(xrange), np.log10(times), "b-", label="data")
+    plt.plot(
+        np.log10(xrange),
+        func(np.log10(xrange), *popt),
+        "r--",
+        label="fit: m=%5.3f, b=%5.3f" % tuple(popt),
+    )
+    plt.ylabel("log(time to compute sequence of length 10)")
+    plt.xlabel("log(number of qubits)")
+    plt.title("How does time scale with number of qubits?")
+    plt.legend(loc="best")
+    plt.show()

@@ -9,7 +9,7 @@ def plot_shots(
     maxm=50,
     sample_period=1,
     num_trials=1000,
-    mem_err_param=1,
+    mem_err_param=0,
     mem_err_func=mem_qubit_reset,
 ):
     """Plots survival probabilities for an RB experiment with an adversarial noise model
