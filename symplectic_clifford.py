@@ -34,9 +34,13 @@ class SymplecticClifford:
         return SymplecticClifford(new_table, self.global_phase * other.global_phase)
 
     def inv(self):
+        augmented_matrix = np.column_stack(
+            (self.table[:, :-1], np.eye(2 * self.num_qubits, dtype=int))
+        )
+        symp_inverse = gf2elim(augmented_matrix)[:, 2 * self.num_qubits :]
         self.table = np.column_stack(
             (
-                np.linalg.inv(self.table[:, :-1]).astype(int) % 2,
+                symp_inverse,
                 self.table[:, -1],
             )
         )
@@ -121,7 +125,7 @@ class SymplecticClifford:
         new_table = column_stack((self.table[:, :-1], new_pauli))
         return SymplecticClifford(new_table, self.global_phase)
 
-    def assert_commutations(self):
+    def assert_commutations(self, msg=""):
         target = np.array(
             [
                 [
@@ -135,4 +139,43 @@ class SymplecticClifford:
         for i in range(2 * self.num_qubits):
             for j in range(i):
                 comm_mat[i, j] = commutes(self.table[:, :-1], i, j)
+        assert det(self.table[:, :-1]) != 0
         assert np.array_equal(comm_mat, target)
+
+
+# @numba.jit(
+#     nopython=True, parallel=True
+# )  # parallel speeds up computation only over very large matrices
+# # M is a mxn matrix binary matrix
+# # all elements in M should be uint8
+def gf2elim(M):
+
+    m, n = M.shape
+
+    i = 0
+    j = 0
+
+    while i < m and j < n:
+        # find value and index of largest element in remainder of column j
+        k = np.argmax(M[i:, j]) + i
+
+        # swap rows
+        # M[[k, i]] = M[[i, k]] this doesn't work with numba
+        temp = np.copy(M[k])
+        M[k] = M[i]
+        M[i] = temp
+
+        aijn = M[i, j:]
+
+        col = np.copy(M[:, j])  # make a copy otherwise M will be directly affected
+
+        col[i] = 0  # avoid xoring pivot row with itself
+
+        flip = np.outer(col, aijn)
+
+        M[:, j:] = M[:, j:] ^ flip
+
+        i += 1
+        j += 1
+
+    return M

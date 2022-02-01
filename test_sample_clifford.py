@@ -9,7 +9,7 @@ from symplectic_clifford import SymplecticClifford
 
 @pytest.mark.parametrize(
     "num_qubits",
-    [1, 2, 5, 20],
+    [1, 2, 5],
 )
 def test_measure_random_clifford(num_qubits):
     target = np.array(
@@ -25,3 +25,17 @@ def test_measure_random_clifford(num_qubits):
             for j in range(i):
                 comm_mat[i, j] = commutes(C.table, i, j)
         assert np.array_equal(comm_mat, target)
+
+
+@pytest.mark.parametrize(
+    "num_qubits",
+    [1, 2, 5],
+)
+def test_mult(num_qubits):
+    for _ in range(100):
+        C_1 = SymplecticClifford(random_clifford_generator(num_qubits, chp=True))
+        for _ in range(100):
+            C_2 = SymplecticClifford(random_clifford_generator(num_qubits, chp=True))
+            C_1.assert_commutations(msg="C_1 Failed")
+            C_2.assert_commutations(msg="C_2 Failed")
+            (C_1 * C_2).assert_commutations(msg="C_1 * C_2 Failed")

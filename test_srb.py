@@ -9,8 +9,8 @@ from srb import srb_memory
 
 
 def test_srb_memory():
-    for _ in range(100):
-        stuff = [srb_memory(100, 5, 0, lambda x, y: y) for _ in range(1)]
+    for i in range(100):
+        stuff = [srb_memory(i, 1, 0, lambda x, y: y) for _ in range(1)]
 
 
 def test_scaling():
