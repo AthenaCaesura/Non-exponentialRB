@@ -1,102 +1,69 @@
-import numpy as np
-from qiskit.quantum_info import Clifford, Pauli, StabilizerState, random_clifford
+from numpy import array, column_stack, identity, newaxis, zeros
+from numpy.linalg import inv
+from numpy.random import uniform
 
-MULT_SINGLE_QUBIT_PAULIS_NO_PHASE = {
-    "I": {
-        "I": "I",
-        "X": "X",
-        "Y": "Y",
-        "Z": "Z",
-    },
-    "X": {
-        "I": "X",
-        "X": "I",
-        "Y": "Z",
-        "Z": "Y",
-    },
-    "Y": {
-        "I": "Y",
-        "X": "Z",
-        "Y": "I",
-        "Z": "X",
-    },
-    "Z": {
-        "I": "Z",
-        "X": "Y",
-        "Y": "X",
-        "Z": "I",
-    },
-}
+from Sample_Clifford_Element import random_clifford_generator
+from symplectic_clifford import SymplecticClifford
 
 
-def mem_qubit_flip(stored_pauli, n, flip_prob):
+def mem_qubit_flip(reg_b_state, n, flip_prob):
     """
-    Simulate a faulty memory in register B. Acheives this by multiplying the current
-    pauli frame by X's and Z's for each qubit. When an X is applied, we have effectively
-    flipped the a qubit in register B which was storing that X gate. Similarly for Z.
+    Simulate a faulty memory in register B where the encoding for pauli is
+    flipped randomly with some probability.
 
     Parameters
     ----------
-    stored_pauli : numpy array (2^n x 2^n)
-            Pauli stored in register B to be used as the current error applied to
-            register A.
+    reg_b_state : numpy array (2*n)
+            Binary array encoding for a pauli.
     fip_prob : double in [0, 1]
             Probability that a qubit in register B flips due to a memory error.
 
     Returns
     -------
-    stored_pauli_with_error : numpy array (2^n x 2^n)
-            Pauli matrix used as the current error with faulty memory applied.
+    err_b_state : numpy array (2*n)
+            Binary array encoding for a pauli with error applied.
 
     """
-    stored_pauli_with_error = ""
-    for pauli_str in stored_pauli.to_label():
-        if np.random.uniform(0, 1) <= flip_prob:
-            MULT_SINGLE_QUBIT_PAULIS_NO_PHASE[pauli_str]["X"] = pauli_str
-        if np.random.uniform(0, 1) <= flip_prob:
-            MULT_SINGLE_QUBIT_PAULIS_NO_PHASE[pauli_str]["Z"] = pauli_str
-        stored_pauli_with_error += pauli_str
-    return Pauli(stored_pauli_with_error)
+    err_b_state = []
+    for elem in reg_b_state:
+        if uniform(0, 1) < flip_prob:
+            if uniform(0, 1) < 0.5:
+                err_b_state.append(0)
+            else:
+                err_b_state.append(1)
+        else:
+            err_b_state.append(elem)
+    return err_b_state
 
 
-def mem_qubit_reset(stored_pauli, reset_prob):
+def mem_qubit_reset(reg_b_state, reset_prob):
     """
-    Simulate a faulty memory in register B. Has a probability of reseting each of
-    the qubits in register B to the zero state. Models memory in syndrome qubits.
+    Simulate a faulty memory in register B where the encoding for pauli is
+    erased randomly for each bit with some probability.
 
     Parameters
     ----------
-    stored_pauli : numpy array (2^n x 2^n)
-            Pauli stored in register B to be used as the current error applied to
-            register A.
+    reg_b_state : numpy array (2^n x 2^n)
+            Binary array encoding for a pauli.
     reset_prob : double in [0, 1]
             Probability that each memory qubit in register be resets to |0>.
 
     Returns
     -------
-    stored_pauli_with_error : numpy array (2^n x 2^n)
-            Pauli matrix used as the current error with faulty memory applied.
+    err_b_state : numpy array (2^n x 2^n)
+            Binary array encoding for a pauli with error applied.
 
     """
-    stored_pauli_with_error = ""
-    for pauli_str in stored_pauli.to_label():
-        # If X is found in the stored Pauli, reset with probability reset_prob
-        if np.random.uniform(0, 1) <= reset_prob:
-            if pauli_str == "X":
-                pauli_str = "I"
-            if pauli_str == "Y":
-                pauli_str = "Z"
-        # If Z is found in the stored Pauli, reset with probability reset_prob
-        if np.random.uniform(0, 1) <= reset_prob:
-            if pauli_str == "Z":
-                pauli_str = "I"
-            if pauli_str == "Y":
-                pauli_str = "X"
-        stored_pauli_with_error += pauli_str
-    return Pauli(stored_pauli_with_error)
+    err_b_state = []
+    for elem in reg_b_state:
+        if uniform(0, 1) < reset_prob:
+            err_b_state.append(0)
+        else:
+            err_b_state.append(elem)
+    return err_b_state
 
 
-def srb_memory(seq_len, n, mem_err_param, mem_err_func):
+def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
     """
     Run a standard randomized benchmarking (srb) experiment on a qubit register A. While
     doing so, we store a Pauli operator in register B and propagate the pauli through each
@@ -122,60 +89,30 @@ def srb_memory(seq_len, n, mem_err_param, mem_err_func):
             Survival probability of the input state after RB sequence.
 
     """
-    reg_a_state = StabilizerState(Pauli("I" * n))  # initialize in |00..0> state
-    pauli_stored_in_reg_b = Pauli("X" + "I" * (n - 1))
-    total_seq = Clifford.from_label("I" * n)
-    for _ in range(seq_len):
-        C = random_clifford(n)
-        """Apply noisy random Clifford gate and track inverse"""
-        reg_a_state = reg_a_state.evolve(C)
-        total_seq &= C
-        """ Update pauli stored in register B """
-        pauli_stored_in_reg_b = pauli_stored_in_reg_b.evolve(C)
-        pauli_stored_in_reg_b = mem_err_func(pauli_stored_in_reg_b, mem_err_param)
-        """ Apply pauli stored in register B to register A"""
-        reg_a_state = reg_a_state.evolve(
-            Clifford.from_label(pauli_stored_in_reg_b.to_label().replace("-", ""))
-        )
-    inv = total_seq.adjoint()
-    reg_a_state = reg_a_state.evolve(inv)
-    return reg_a_state.probabilities()[0]  # probability of |00..0> state
-
-
-from time import time
-
-import numpy as np
-from matplotlib import pyplot as plt
-from scipy.optimize import curve_fit
-
-
-def test_scaling():
-    times = np.array([])
-    xrange = range(13, 30)
-    for i in xrange:
-        print(i)
-        start = time()
-        srb_memory(10, i, 0, mem_qubit_reset)
-        times = np.append(times, [time() - start])
-
-    xrange = np.array(xrange)
-
-    def func(x, m, b):
-        return m * x + b
-
-    popt, pcov = curve_fit(func, np.log10(xrange), np.log10(times))
-
-    print(popt)
-
-    plt.plot(np.log10(xrange), np.log10(times), "b-", label="data")
-    plt.plot(
-        np.log10(xrange),
-        func(np.log10(xrange), *popt),
-        "r--",
-        label="fit: m=%5.3f, b=%5.3f" % tuple(popt),
+    reg_a_state = SymplecticClifford(
+        column_stack((identity(2 * num_qubits), zeros(2 * num_qubits)))
     )
-    plt.ylabel("log(time to compute sequence of length 10)")
-    plt.xlabel("log(number of qubits)")
-    plt.title("How does time scale with number of qubits?")
-    plt.legend(loc="best")
-    plt.show()
+    reg_a_state.assert_commutations()
+    reg_b_state = array([0] * num_qubits + [1] + [0] * (num_qubits - 1))
+    tot_seq = SymplecticClifford(
+        column_stack((identity(2 * num_qubits), zeros(2 * num_qubits)))
+    )
+    tot_seq.assert_commutations()
+    for _ in range(seq_len):
+        C = SymplecticClifford(random_clifford_generator(num_qubits, chp=True))
+        """Apply random Clifford gate and track inverse"""
+        reg_a_state = C * reg_a_state
+        reg_a_state.assert_commutations()
+        tot_seq = C * tot_seq
+        tot_seq.assert_commutations()
+        """ Update pauli stored in register B """
+        reg_b_state = C.evolve_pauli(reg_b_state)
+        reg_b_state = mem_err_func(mem_err_param, reg_b_state)
+        """ Apply pauli stored in register B to register A"""
+        reg_a_state = reg_a_state.pauli_mult(reg_b_state)
+        reg_a_state.assert_commutations()
+    tot_seq.inv()  # invert errorless sequence
+    tot_seq.assert_commutations()
+    reg_a_state = tot_seq * reg_a_state
+    reg_a_state.assert_commutations()
+    return reg_a_state.measure_all_qubits()  # probability of |00..0> state
