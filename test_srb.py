@@ -10,8 +10,12 @@ from srb import mem_qubit_flip, mem_qubit_reset, srb_memory
 
 def test_srb_memory():
     target = [0, 1] * 50
-    out = [srb_memory(i, 1, 0, lambda x, y: y) for i in range(100)]
+    out = [srb_memory(i, 1, 0, lambda x, y: x) for i in range(100)]
     assert out == target
+
+
+def test_srb_memory_with_reg_b_copies():
+    [srb_memory(i, 1, 0.1, mem_qubit_reset, reg_b_copies=3) for i in range(100)]
 
 
 def test_mem_qubit_reset():

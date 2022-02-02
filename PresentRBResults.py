@@ -15,6 +15,7 @@ def plot_shots(
     num_trials=1000,
     mem_err_param=0,
     mem_err_func=mem_qubit_reset,
+    reg_b_copies=1,
     filename=None,
 ):
     """Plots survival probabilities for an RB experiment with an adversarial noise model
@@ -40,7 +41,13 @@ def plot_shots(
     """ Gather expectation values for different sequence lengths. """
     tot_evals = np.array([0.0 for _ in range(1, maxm, sample_period)])
     srb_helper = lambda shot_num: _srb_helper(
-        shot_num, num_qubits, mem_err_param, mem_err_func, maxm, sample_period
+        shot_num,
+        num_qubits,
+        mem_err_param,
+        mem_err_func,
+        maxm,
+        sample_period,
+        reg_b_copies,
     )
     tot_evals = Parallel(n_jobs=multiprocessing.cpu_count())(
         delayed(srb_helper)(i) for i in range(num_trials)
@@ -70,7 +77,9 @@ def plot_shots(
     plt.clf()
 
 
-def _srb_helper(shot_num, num_qubits, mem_err_param, mem_err_func, maxm, sample_period):
+def _srb_helper(
+    shot_num, num_qubits, mem_err_param, mem_err_func, maxm, sample_period, reg_b_copies
+):
     """Helper function for parallelization. Indicates the number of shots already taken.
 
     Args:
@@ -104,16 +113,8 @@ def _srb_helper(shot_num, num_qubits, mem_err_param, mem_err_func, maxm, sample_
                 num_qubits,
                 mem_err_param,
                 mem_err_func,
+                reg_b_copies=reg_b_copies,
             )
             for seq_len in range(1, maxm, sample_period)
         ]
     )
-
-
-plot_shots(
-    10,
-    num_trials=1000,
-    mem_err_param=0.9,
-    mem_err_func=mem_qubit_reset,
-    filename="tests/test1",
-)

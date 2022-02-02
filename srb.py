@@ -1,4 +1,4 @@
-from numpy import array, column_stack, identity, newaxis, zeros
+from numpy import argmax, array, bincount, column_stack, identity, newaxis, zeros
 from numpy.linalg import inv
 from numpy.random import uniform
 
@@ -63,7 +63,7 @@ def mem_qubit_reset(reg_b_state, reset_prob):
     return array(err_b_state)
 
 
-def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
+def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func, reg_b_copies=1):
     """
     Run a standard randomized benchmarking (srb) experiment on a qubit register A. While
     doing so, we store a Pauli operator in register B and propagate the pauli through each
@@ -82,6 +82,8 @@ def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
             to srb_memory to show differences in memory error.
     mem_err_func : function (Pauli, mem_err_param) -> Pauli
             Error applied to the pauli stored in register b due to faulty memory.
+    reg_b_copies: int
+            Copies of register bb to be used to protect memory.
 
     Returns
     -------
@@ -92,7 +94,9 @@ def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
     reg_a_state = SymplecticClifford(
         column_stack((identity(2 * num_qubits), zeros(2 * num_qubits)))
     )
-    reg_b_state = array([0] * num_qubits + [1] + [0] * (num_qubits - 1))
+    reg_b_state = array(
+        [[0] * num_qubits + [1] + [0] * (num_qubits - 1)] * reg_b_copies
+    )
     tot_seq = SymplecticClifford(
         column_stack((identity(2 * num_qubits), zeros(2 * num_qubits)))
     )
@@ -102,10 +106,12 @@ def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
         reg_a_state = C * reg_a_state
         tot_seq = C * tot_seq
         """ Update pauli stored in register B """
-        reg_b_state = C.evolve_pauli(reg_b_state)
-        reg_b_state = mem_err_func(reg_b_state, mem_err_param)
+        for i in range(reg_b_copies):
+            reg_b_state[i] = C.evolve_pauli(reg_b_state[i])
+            reg_b_state[i] = mem_err_func(reg_b_state[i], mem_err_param)
         """ Apply pauli stored in register B to register A"""
-        reg_a_state = reg_a_state.pauli_mult(reg_b_state)
+        majority_vote = [argmax(bincount(pauli)) for pauli in reg_b_state.T]
+        reg_a_state = reg_a_state.pauli_mult(majority_vote)
     tot_seq.inv()  # invert errorless sequence
     reg_a_state = tot_seq * reg_a_state
     return reg_a_state.measure_all_qubits()  # probability of |00..0> state

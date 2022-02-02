@@ -143,11 +143,8 @@ class SymplecticClifford:
         assert np.array_equal(comm_mat, target)
 
 
-# @numba.jit(
-#     nopython=True, parallel=True
-# )  # parallel speeds up computation only over very large matrices
-# # M is a mxn matrix binary matrix
-# # all elements in M should be uint8
+# M is a mxn matrix binary matrix
+# all elements in M should be uint8
 def gf2elim(M):
 
     m, n = M.shape
