@@ -185,6 +185,3 @@ def random_clifford_generator(n_qubits, chp=False):
         symp = chp_format(symp)
     pauli_string = choices([0, 1], k=2 * n_qubits)
     return column_stack((symp, pauli_string))
-
-
-print(random_clifford_generator(3))
