@@ -107,11 +107,11 @@ def test_measure_qubit(mat, ans):
     [1, 2, 5, 20],
 )
 def test_inv(num_qubits):
-    for _ in range(100):
+    for _ in range(1000):
         C = SymplecticClifford(random_clifford_generator(num_qubits, chp=True))
         C_original = deepcopy(C)
         C.inv()
-        assert np.array_equal(
+        np.testing.assert_array_equal(
             (C_original * C).table,
             np.column_stack((np.identity(2 * num_qubits), np.zeros(2 * num_qubits))),
         )

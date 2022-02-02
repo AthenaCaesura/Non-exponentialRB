@@ -41,7 +41,7 @@ class SymplecticClifford:
         self.table = np.column_stack(
             (
                 symp_inverse,
-                self.table[:, -1],
+                dot(symp_inverse, self.table[:, -1]),
             )
         )
 

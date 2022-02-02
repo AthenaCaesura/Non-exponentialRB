@@ -71,4 +71,4 @@ def plot_shots(
     plt.clf()
 
 
-plot_shots(3)
+plot_shots(1)

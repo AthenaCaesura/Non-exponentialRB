@@ -6,7 +6,7 @@ from Sample_Clifford_Element import random_clifford_generator
 from symplectic_clifford import SymplecticClifford
 
 
-def mem_qubit_flip(reg_b_state, n, flip_prob):
+def mem_qubit_flip(reg_b_state, flip_prob):
     """
     Simulate a faulty memory in register B where the encoding for pauli is
     flipped randomly with some probability.
@@ -33,7 +33,7 @@ def mem_qubit_flip(reg_b_state, n, flip_prob):
                 err_b_state.append(1)
         else:
             err_b_state.append(elem)
-    return err_b_state
+    return array(err_b_state)
 
 
 def mem_qubit_reset(reg_b_state, reset_prob):
@@ -60,7 +60,7 @@ def mem_qubit_reset(reg_b_state, reset_prob):
             err_b_state.append(0)
         else:
             err_b_state.append(elem)
-    return err_b_state
+    return array(err_b_state)
 
 
 def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
@@ -92,27 +92,20 @@ def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func):
     reg_a_state = SymplecticClifford(
         column_stack((identity(2 * num_qubits), zeros(2 * num_qubits)))
     )
-    reg_a_state.assert_commutations()
     reg_b_state = array([0] * num_qubits + [1] + [0] * (num_qubits - 1))
     tot_seq = SymplecticClifford(
         column_stack((identity(2 * num_qubits), zeros(2 * num_qubits)))
     )
-    tot_seq.assert_commutations()
     for _ in range(seq_len):
         C = SymplecticClifford(random_clifford_generator(num_qubits, chp=True))
         """Apply random Clifford gate and track inverse"""
         reg_a_state = C * reg_a_state
-        reg_a_state.assert_commutations(msg=f"Current num = {_}")
         tot_seq = C * tot_seq
-        tot_seq.assert_commutations(msg=f"Current num = {_}")
         """ Update pauli stored in register B """
         reg_b_state = C.evolve_pauli(reg_b_state)
-        reg_b_state = mem_err_func(mem_err_param, reg_b_state)
+        reg_b_state = mem_err_func(reg_b_state, mem_err_param)
         """ Apply pauli stored in register B to register A"""
         reg_a_state = reg_a_state.pauli_mult(reg_b_state)
-        reg_a_state.assert_commutations(msg=f"Current num = {_}")
-        tot_seq.assert_commutations(msg=f"Current num = {_}")
     tot_seq.inv()  # invert errorless sequence
-    tot_seq.assert_commutations(msg="at end")
     reg_a_state = tot_seq * reg_a_state
     return reg_a_state.measure_all_qubits()  # probability of |00..0> state

@@ -5,31 +5,53 @@ import pytest
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
-from srb import srb_memory
+from srb import mem_qubit_flip, mem_qubit_reset, srb_memory
 
 
 def test_srb_memory():
-    for i in range(100):
-        stuff = [srb_memory(i, 1, 0, lambda x, y: y) for _ in range(1)]
+    target = [0, 1] * 50
+    out = [srb_memory(i, 1, 0, lambda x, y: y) for i in range(100)]
+    assert out == target
+
+
+def test_mem_qubit_reset():
+    assert [0] == mem_qubit_reset([0], 1)
+    assert [0] == mem_qubit_reset([1], 1)
+    assert [0] == mem_qubit_reset([0], 0)
+    assert [1] == mem_qubit_reset([1], 0)
+
+
+def test_mem_qubit_flip():
+    num_shots = 10000
+    for base in [[0], [1]]:
+        avg = sum([mem_qubit_flip(base, 1)[0] for _ in range(num_shots)]) / num_shots
+        assert avg == pytest.approx(0.5, 0.1)
+    assert [0] == mem_qubit_flip([0], 0)
+    assert [1] == mem_qubit_flip([1], 0)
 
 
 def test_scaling():
     times = np.array([])
-    xrange = range(1, 20, 3)
+    xrange = range(1, 30, 3)
+    num_samples = 10
     for i in xrange:
         print(i)
-        start = time()
-        srb_memory(10, i, 0, lambda x, y: y)
-        times = np.append(times, [time() - start])
+        for _ in range(num_samples):
+            start = time()
+            srb_memory(10, i, 0, lambda x, y: y)
+            times = np.append(times, [time() - start])
 
     xrange = np.array(xrange)
 
     def func(x, m, b):
         return m * x + b
 
-    popt, pcov = curve_fit(func, np.log10(xrange), np.log10(times))
+    popt, pcov = curve_fit(
+        func, np.log10([i for i in xrange for _ in range(num_samples)]), np.log10(times)
+    )
 
-    breakpoint()
+    # for some reason we get excellent scaling here
+    assert popt[0] < 2
 
     # Make plot of the scaling
     # plt.plot(np.log10(xrange), np.log10(times), "b-", label="data")
