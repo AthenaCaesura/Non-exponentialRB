@@ -9,7 +9,7 @@ from srb import mem_qubit_reset, srb_memory
 #     filename="tests/test2",
 # )
 plot_shots(
-    1,
+    3,
     mem_err_param=0.40,
     reg_b_copies=3,
     filename="tests/test_with_EC_5",
