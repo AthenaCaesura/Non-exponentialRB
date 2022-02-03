@@ -111,6 +111,7 @@ def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func, reg_b_copies=1)
             reg_b_state[i] = mem_err_func(reg_b_state[i], mem_err_param)
         """ Apply pauli stored in register B to register A"""
         majority_vote = [argmax(bincount(pauli)) for pauli in reg_b_state.T]
+        reg_b_state = array([majority_vote] * reg_b_copies)
         reg_a_state = reg_a_state.pauli_mult(majority_vote)
     tot_seq.inv()  # invert errorless sequence
     reg_a_state = tot_seq * reg_a_state

@@ -4,7 +4,6 @@ from re import S
 
 import numpy as np
 import pytest
-
 from Sample_Clifford_Element import random_clifford_generator
 from symplectic_clifford import SymplecticClifford
 
