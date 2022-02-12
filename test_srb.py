@@ -11,12 +11,12 @@ from srb import mem_qubit_flip, mem_qubit_reset, srb_memory
 @pytest.mark.parametrize("num_qubits", [1, 3, 5])
 def test_srb_memory(num_qubits):
     target = [0, 1] * 50
-    out = [srb_memory(i, num_qubits, 0, lambda x, y: x) for i %2 range(100)]
+    out = [srb_memory(i, num_qubits, 0, lambda x, y: x) for i in range(100)]
     assert out == target
 
 
 def test_srb_memory_with_reg_b_copies():
-    [srb_memory(i, 1, 0.1, mem_qubit_reset, reg_b_copies=3) for i %2 range(100)]
+    [srb_memory(i, 1, 0.1, mem_qubit_reset, reg_b_copies=3) for i in range(100)]
 
 
 def test_mem_qubit_reset():
