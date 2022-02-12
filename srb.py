@@ -104,15 +104,24 @@ def srb_memory(seq_len, num_qubits, mem_err_param, mem_err_func, reg_b_copies=1)
         C = SymplecticClifford(random_clifford_generator(num_qubits, chp=True))
         """Apply random Clifford gate and track inverse"""
         reg_a_state = C * reg_a_state
+        print("after")
+        print(reg_a_state.table)
         tot_seq = C * tot_seq
         """ Update pauli stored in register B """
         for i in range(reg_b_copies):
             reg_b_state[i] = C.evolve_pauli(reg_b_state[i])
             reg_b_state[i] = mem_err_func(reg_b_state[i], mem_err_param)
         """ Apply pauli stored in register B to register A"""
-        majority_vote = [argmax(bincount(pauli)) for pauli in reg_b_state.T]
+        majority_vote = [max(pauli) for pauli in reg_b_state.T]
         reg_b_state = array([majority_vote] * reg_b_copies)
         reg_a_state = reg_a_state.pauli_mult(majority_vote)
+        print("after")
+        print(reg_a_state.table)
+    print(tot_seq.table)
     tot_seq.inv()  # invert errorless sequence
+    print(tot_seq.table)
     reg_a_state = tot_seq * reg_a_state
     return reg_a_state.measure_all_qubits()  # probability of |00..0> state
+
+
+srb_memory(21, 2, 0, mem_qubit_reset, 3)

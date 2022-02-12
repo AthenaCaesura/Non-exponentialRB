@@ -1,14 +1,11 @@
-from math import log2
 from random import choice
-from typing import SupportsAbs
-from zlib import Z_BEST_COMPRESSION
 
 import numpy as np
 from numpy import *
 from numpy import bitwise_xor, dot, inner, row_stack
-from numpy.linalg import det, inv
+from numpy.linalg import det
 
-from Sample_Clifford_Element import commutes, random_clifford_generator
+from Sample_Clifford_Element import commutes
 
 
 def symplectic_product(v, w):
@@ -45,13 +42,13 @@ class SymplecticClifford:
             )
         )
 
-    def measure_all_qubits(self) -> double:
+    def measure_all_qubits(self) -> float:
         prob = 1
         for i in range(self.num_qubits):
             prob *= self.measure_qubit(i)
         return prob
 
-    def measure_qubit(self, a: int) -> double:
+    def measure_qubit(self, a: int) -> float:
         random_measurements = []
         for p in range(self.num_qubits):
             if self.table[self.num_qubits + p, a]:
@@ -98,6 +95,18 @@ class SymplecticClifford:
         self.table[h] = out
 
     def g(self, x_1, z_1, x_2, z_2):
+        """g function as defined in Improved simulation of stabilizer circuits
+        by Aaronson and Gottesman. Keeps track of sign between multiplications
+
+        Args:
+            x_1 (int): 0 if first element is Z or Y, 1 if first element is X or I
+            z_1 (int): 0 if first element is X or Y, 1 if first element is Z or I
+            x_2 (int): 0 if second element is Z or Y, 1 if first element is X or I
+            z_2 (int): 0 if second element is X or Y, 1 if first element is Z or I
+
+        Returns:
+            sign: sign of resulting multiplication
+        """
         if x_1 and z_1:
             return z_2 - x_2
         if x_1:
@@ -125,7 +134,10 @@ class SymplecticClifford:
         new_table = column_stack((self.table[:, :-1], new_pauli))
         return SymplecticClifford(new_table, self.global_phase)
 
-    def assert_commutations(self, msg=""):
+    def assert_commutations(self):
+        """Asserts that the paulis stored in self.table are stabilizers and
+        anit-stabilizers (pure errors) in the correct order.
+        """
         target = np.array(
             [
                 [
@@ -143,12 +155,15 @@ class SymplecticClifford:
         assert np.array_equal(comm_mat, target)
 
 
+"""
+All credit for this function goes to  Samuele Cornell.
+"""
+
 # M is a mxn matrix binary matrix
 # all elements in M should be uint8
 def gf2elim(M):
 
     m, n = M.shape
-
     i = 0
     j = 0
 
