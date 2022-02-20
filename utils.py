@@ -1,179 +1,21 @@
-"""
-Created on Fri Oct 29 14:06:58 2021
-
-@author: Athena
-
-General Utilities modele for applying standard RB with a memory which
-stores and periodically applies an error.
-"""
 import numpy as np
-from math import sqrt
-from functools import lru_cache
-
-single_qubit_paulis = np.array(
-    [[[1, 0], [0, 1]], [[0, 1], [1, 0]], [[0, -1j], [1j, 0]], [[1, 0], [0, -1]]],
-    dtype=np.complex128,
-)
-
-H = 1 / sqrt(2) * np.array([[1, 1], [1, -1]])
-P = np.array([[1, 0], [0, 1j]])
-CNOT = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
 
 
-MULT_SINGLE_QUBIT_PAULIS_NO_PHASE = {
-    "I": {
-        "I": "I",
-        "X": "X",
-        "Y": "Y",
-        "Z": "Z",
-    },
-    "X": {
-        "I": "X",
-        "X": "I",
-        "Y": "Z",
-        "Z": "Y",
-    },
-    "Y": {
-        "I": "Y",
-        "X": "Z",
-        "Y": "I",
-        "Z": "X",
-    },
-    "Z": {
-        "I": "Z",
-        "X": "Y",
-        "Y": "X",
-        "Z": "I",
-    },
-}
+def symplectic_inner_product(vec_1: np.ndarray, vec_2: np.ndarray) -> bool:
+    """Symplectic inner product of vec_1 and vec_2.
 
+    Args:
+        row_i (np.ndarray): (1 x 2 * num_qubits) Binary vector repsenting a pauli.
+        row_j (np.ndarray): (1 x 2 * num_qubits) Binary vector repsenting a pauli.
 
-def get_eigenstate(paulituples):
+    Returns: int
+        Symplectic inner product of vectors.
     """
-    Takes list conataining tuples which are (sign, paulinum) where
-    sign is either {-1, +1} and paulinum is in {1,2,3} for X, Y, and
-    Z respectively. Function returns the pauli eigenstate for each
-    of the paulis.
+    if len(vec_1) % 2 == 0 or len(vec_1) != len(vec_2):
+        raise TypeError("Vectors must be same size and of form 2*num_qubits")
 
-    Parameters
-    ----------
-    paulituples : list
-            List of tuples describing the pauli eigenstate to be made.
-
-    Returns
-    -------
-    state : numpy array
-            State which is the kronecker product of all the paulis
-            described by paulituples
-    """
-    state = np.eye(1)
-    for pauli in paulituples:
-        state = np.kron(
-            state, 1 / 2 * (np.eye(2) + pauli[0] * single_qubit_paulis[pauli[1]])
-        )
-    return state
-
-
-def dot(*matrices):
-    """
-    Compute the matrix product of inputs. Allows for many inputs by recusion.
-
-    Parameters
-    ----------
-    *matrices : numpy array
-            Matricies to be multiplied
-
-    Returns
-    -------
-    product : numpy array
-            Matrix product of the input matricies.
-
-    """
-    if len(matrices) <= 1:
-        return matrices[0]
-    return np.matmul(matrices[0], dot(*matrices[1:]))
-
-
-@lru_cache(maxsize=None)
-def pauli_on_qubit(pauli_num, qubit_num, num_qubits):
-    """
-    Creates a matrix which is the pauli given by pauli_num enacted on the
-    qubit given by qubit_num.
-
-    Parameters
-    ----------
-    pauli_num : int in {1,2,3}
-            Number designation of the pauli. {1,2,3} -> {X,Y,Z}.
-    qubit_num : int in {1,..., num_qubits}
-            Number of the qubit that pauli is to act on.
-    num_qubits : int
-            Number of qubits in the system.
-
-    Returns
-    -------
-    full_pauli : numpy.array
-            The pauli given by pauli_num acting on the qubit given by qubit_num.
-
-    """
-    full_pauli = np.eye(1)
-    for i in range(num_qubits):
-        if i != qubit_num:
-            full_pauli = np.kron(full_pauli, np.eye(2))
-        else:
-            full_pauli = np.kron(full_pauli, single_qubit_paulis[pauli_num])
-    return full_pauli
-
-
-def depolarizing_noise(state, n, p):
-    """
-    Applied despolarizing noise model to state.
-
-    Parameters
-    ----------
-    state : numpy array (2^n x 2^n)
-            Input state to be depolarized.
-    p : double [0,1]
-            probability of depolarization
-    n : positive integer
-            Number of qubits in system.
-
-    Returns
-        -------
-        depolarized_state : numpy array (2^n x 2^n)
-                    Input state with depolarizing noise attached.
-
-    """
-    return 4 / 3 * p * np.eye(2 ** n) / 2 ** n + (1 - 4 / 3 * p) * state
-
-
-def comm(mat1, mat2):
-    """Calculate the commutator of 2 matrices
-
-    Parameters
-    ----------
-    mats 1 & 2 : np.ndarray
-        Matrices of the same dimension
-
-    Returns
-    -------
-    Commutator of the two input matrices
-    """
-    return dot(mat1, mat2) - dot(mat2, mat1)
-
-
-def symplectic_to_natural(clif):
-    """
-    Takes the symplectic form of a clifford gate to the normal
-    representaiton of clifford matricies.
-
-    Parameters
-    ----------
-    clif : np.array
-        Clifford Matrix in sympletic representation.
-
-    Returns
-    -------
-    natural_clif : np.array
-        Clifford matrix in natural representation.
-    """
-    pass
+    n = len(vec_1) // 2
+    prod = np.dot(vec_1[:n], vec_2[n : 2 * n])
+    prod += np.dot(vec_2[:n], vec_1[n : 2 * n])
+    prod %= 2
+    return prod
