@@ -8,7 +8,7 @@ def test_no_error_plot():
     if os.path.exists("plots/test_plots/no_error.png"):
         os.remove("plots/test_plots/no_error.png")
 
-    target = [(i, float(i % 2)) for i in range(1, 20)]
+    target = [(i, float((i + 1) % 2)) for i in range(1, 20)]
     evals = plot_expectation_values(
         1,
         max_seq_length=20,

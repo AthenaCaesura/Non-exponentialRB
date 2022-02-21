@@ -17,6 +17,7 @@ def plot_expectation_values(
     reg_b_copies=1,
     correction_on_reg_b=True,
     num_samples=1000,
+    samples_per_shot=100,
     filename=None,
     show_plot=False,
 ):
@@ -32,15 +33,18 @@ def plot_expectation_values(
         sample_period (int, optional):
             The rate of sampling of the sequence lengths between 1 and max_seq_length.
             Defaults to 1.
-        num_samples (int, optional):
-            Number of times the expectation value is collected from RB experiment.
-            Defaults to 1000.
         mem_err_param (int, optional):
             Controls the severity of the error on the
         mem_err_func (function):
             Error function to be applied to the memory
         reg_b_copies (int):
             Number of copies of register b used as a memory.
+        num_samples (int, optional):
+            Number of times the expectation value is collected from RB experiment.
+            Defaults to 1000.
+        shots_per_sample (int, optional):
+            Number of samples used per shot. Used to calcualte standard deviation.
+            Defaults to 100.
         filename (directory):
             Name of file to save results in. Always saves in plots.
         show_plot (bool):
@@ -49,7 +53,6 @@ def plot_expectation_values(
     """
 
     """ Gather expectation values for different sequence each length. """
-    evals = np.array([0.0 for _ in range(1, max_seq_length, sample_period)])
     helper = partial(
         _srb_with_memory_helper,
         num_qubits,
@@ -60,15 +63,33 @@ def plot_expectation_values(
         reg_b_copies,
         correction_on_reg_b,
     )
-    evals = Parallel(n_jobs=multiprocessing.cpu_count())(
+    samples = Parallel(n_jobs=multiprocessing.cpu_count())(
         delayed(helper)(sample_num) for sample_num in range(num_samples)
     )
-    """ Average the collected shots into expectation values for each
-    sequence length"""
-    evals = np.mean(np.array(evals).T, axis=1)
+    samples = np.array(samples).T
+    evals = np.mean(samples, axis=1)
+
+    """Calcualte Standard deviation for simulated RB experiment"""
+    if num_samples % samples_per_shot != 0:
+        raise ValueError(
+            f"Cannot split {num_samples} samples "
+            f"evenly into shots with {samples_per_shot} samples."
+        )
+    shots = np.reshape(
+        samples, (max_seq_length, num_samples // samples_per_shot, samples_per_shot)
+    )
+    shots = np.mean(shots, axis=2)
+    stddev = np.std(shots, axis=1)
 
     """ Plots a line graph with each of the expectation values """
-    plt.plot(list(range(1, max_seq_length, sample_period)), evals)
+    plt.errorbar(
+        list(range(0, max_seq_length, sample_period)),
+        evals,
+        yerr=stddev,
+        capsize=2,
+        marker="o",
+        markersize=5,
+    )
     plt.ylabel("Survival Probability")
     plt.xlabel("Gate Sequence Length")
     plt.axis((0, max_seq_length, 0, 1))
@@ -105,8 +126,8 @@ def _srb_with_memory_helper(
     correction_on_reg_b,
     sample_num,
 ):
-    """Helper function for parallelization. Each loop prints a sample for each intger
-    less than max_seq_length.
+    """Helper function for parallelization. Each loop collects a sample for each integer
+    less than max_seq_length. Here we print the sample number to keep track of progress.
 
 
     Args:
@@ -136,13 +157,13 @@ def _srb_with_memory_helper(
     return np.array(
         [
             srb_with_memory(
-                seq_len,
                 num_qubits,
+                seq_len,
                 mem_err_param,
                 mem_err_func,
                 reg_b_copies=reg_b_copies,
                 correction_on_reg_b=correction_on_reg_b,
             )
-            for seq_len in range(1, max_seq_length, sample_period)
+            for seq_len in range(0, max_seq_length, sample_period)
         ]
     )

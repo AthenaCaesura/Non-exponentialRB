@@ -12,7 +12,7 @@ from scipy.optimize import curve_fit
 )
 def test_srb_with_memory_no_error(num_qubits):
     max_seq_length = 50
-    target = [0, 1] * (max_seq_length // 2)
+    target = [1, 0] * (max_seq_length // 2)
     samples = [
         srb_with_memory(
             seq_length,

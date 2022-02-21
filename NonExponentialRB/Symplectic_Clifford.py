@@ -50,7 +50,7 @@ class SymplecticClifford:
         with |00..0> state. With these assumptions, we only need to look at if
         there are any X's in the pauli vector. O(num_qubits) time."""
         assert np.array_equal(self.table[:, :-1], np.eye(2 * self.num_qubits))
-        return 1 if 1 in self.table[1::2, -1] else 0
+        return 0 if 1 in self.table[1::2, -1] else 1
 
     def evolve_pauli(self, pauli: np.ndarray):
         """Evolves a given pauli by the clifford represented by self.

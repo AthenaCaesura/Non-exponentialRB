@@ -4,7 +4,7 @@ from copy import deepcopy
 import numpy as np
 import pytest
 from NonExponentialRB.Sample_Clifford_Element import random_clifford_generator
-from NonExponentialRB.SymplecticClifford import SymplecticClifford, assert_commutations
+from NonExponentialRB.Symplectic_Clifford import SymplecticClifford, assert_commutations
 
 
 @pytest.mark.parametrize(

@@ -2,7 +2,7 @@ import numpy as np
 from numpy.random import uniform
 
 from .Sample_Clifford_Element import random_clifford_generator
-from .SymplecticClifford import SymplecticClifford
+from .Symplectic_Clifford import SymplecticClifford
 
 
 def mem_qubit_flip(reg_b_state, flip_prob):
@@ -63,8 +63,8 @@ def mem_qubit_reset(reg_b_state, reset_prob):
 
 
 def srb_with_memory(
-    seq_len,
     num_qubits,
+    seq_len,
     mem_err_param,
     mem_err_func,
     reg_b_copies=1,
@@ -79,10 +79,10 @@ def srb_with_memory(
 
     Parameters
     ----------
+    num_qubits : positive integer
+            Number of qubits to be benchmarked.
     seq_len : positive integer
             Length of the RB sequence excluding inversion gate.
-    n : positive integer
-            Number of qubits to be benchmarked.
     mem_err_param : double in interval [0 1]
             Control parameter for mem_err_func. Usually varied over many calls
             to srb_with_memory to show differences in memory error.

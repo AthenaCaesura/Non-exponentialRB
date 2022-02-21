@@ -55,7 +55,7 @@ def plot_return_prob_varying_error_rate(
             )
         results.append(1 - np.mean(results_2))
 
-    plt.plot(mem_err_param_vals, results)
+    plt.plot(mem_err_param_vals, results, marker="o", markersize=5)
     plt.ylabel("Probability of returning to |0> state")
     plt.xlabel("Probability of Reset")
     plt.title("How Probable is Returning to the |0> state")
@@ -126,7 +126,7 @@ def plot_return_prob_varying_qubit_number(
             )
         results.append(1 - np.mean(results_2))
 
-    plt.plot(num_qubits_list, results)
+    plt.plot(num_qubits_list, results, marker="o", markersize=5)
     plt.ylabel("Probability of returning to |0> state")
     plt.xlabel("Number of Qubits")
     plt.title("How Probable is Returning to the |0> state")

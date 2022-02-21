@@ -1,4 +1,6 @@
 """See Figure_plan.md to see specifications of plot.
+
+Should finish in around ~5 mins on a laptop.
 """
 from ..Plotting.Plot_Expectation_Values import plot_expectation_values
 from ..Srb_With_Memory import mem_qubit_reset
@@ -10,7 +12,7 @@ def main():
         max_seq_length=20,
         mem_err_param=0,
         mem_err_func=mem_qubit_reset,
-        num_samples=10,
+        num_samples=1000,
         filename="figures/figure_1",
     )
     # Print expectation values for confirmation

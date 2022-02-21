@@ -1,4 +1,6 @@
 """See Figure_plan.md to see specifications of plots
+
+This file might take about ~20 mins to run on a laptop
 """
 
 import numpy as np
@@ -17,7 +19,7 @@ def main():
         mem_err_param_vals=np.arange(0.0, 0.2, 0.02),
         mem_err_func=mem_qubit_reset,
         reg_b_copies=1,
-        num_samples=1000,
+        num_samples=10000,
         filename="figures/figure_3_a",
     )
 
@@ -29,7 +31,7 @@ def main():
         mem_err_param=0.02,
         mem_err_func=mem_qubit_reset,
         reg_b_copies=1,
-        num_samples=1000,
+        num_samples=10000,
         filename="figures/figure_3_b",
     )
 
