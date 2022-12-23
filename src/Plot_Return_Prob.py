@@ -1,9 +1,11 @@
 import os
-from tqdm import tqdm
+
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
 from Srb_With_Memory import mem_qubit_reset, srb_with_memory
+
 
 def plot_return_prob_varying_error_rate(num_qubits, mem_err_param_vals, mem_err_func, num_samples, reg_b_copies, correction_on_reg_b, filename, show_plot):
 # def plot_return_prob_varying_error_rate(
@@ -58,7 +60,7 @@ def plot_return_prob_varying_error_rate(num_qubits, mem_err_param_vals, mem_err_
 		results = np.load(data_file)
 	
 	fig = plt.figure(figsize=(10, 8))
-	plt.plot(mem_err_param_vals, results, marker="o", markersize=5, linewidth = 2)
+	plt.plot(mem_err_param_vals, results, marker="o", markersize=5, linewidth = 2, color="black")
 	plt.ylabel("Probability of returning to $|0\\rangle$ state", fontsize = 18, labelpad = 10)
 	plt.xlabel("Probability of Reset", fontsize = 18, labelpad = 10)
 	# plt.title("How Probable is Returning to the |0> state")
@@ -210,7 +212,7 @@ def plot_return_prob_varying_qubit_number(
 	results = np.load(data_file)
 
 	fig = plt.figure(figsize=(10, 8))
-	plt.plot(num_qubits_list, results, marker="o", markersize=10, linewidth=2) # Include error bars: p * (1 - p) / sqrt(N).
+	plt.plot(num_qubits_list, results, marker="o", markersize=10, linewidth=2, color="black") # Include error bars: p * (1 - p) / sqrt(N).
 	plt.ylabel("Probability of returning to $|0\\rangle$ state", fontsize = 18, labelpad = 10)
 	plt.xlabel("Number of Qubits", fontsize = 18, labelpad = 7)
 	# plt.title("How Probable is Returning to the |0> state")

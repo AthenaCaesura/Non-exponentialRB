@@ -1,11 +1,11 @@
-import os
-from tqdm import tqdm
 import multiprocessing
+import os
 from functools import partial
 
 import matplotlib.pyplot as plt
 import numpy as np
 from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from Srb_With_Memory import mem_qubit_reset, srb_with_memory
 
@@ -110,6 +110,7 @@ def plot_expectation_values(
 		marker="o",
 		markersize=5,
 		linewidth=2,
+		color="black",
 	)
 	plt.ylabel("Survival Probability", fontsize = 18, labelpad = 10)
 	plt.xlabel("Sequence Length", fontsize = 18, labelpad = 7)
